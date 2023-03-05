@@ -1,0 +1,5 @@
+asammdf==7.3.2
+can==0.0.0
+cantools==20.6.0
+numpy==1.24.2
+python_can==4.1.0
