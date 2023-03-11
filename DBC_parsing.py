@@ -34,12 +34,12 @@ def decimal_to_binary(self, num, length, order):
         if not len(dec_to_bin) > length:
             for i in range(length - len(dec_to_bin)):
                 dec_to_bin = "0" + dec_to_bin
-    if not order == 'little_endian':  # if the signal MSB
+    if not order == "little_endian":  # if the signal MSB
         dec_to_bin = dec_to_bin[::-1]
     return dec_to_bin
 
 
-class DBC_parser():
+class DBC_parser:
     def __init__(self):
         self.mdf = MDF()
         # random noise
@@ -71,8 +71,8 @@ class DBC_parser():
     def export_csv(self, data):
         header = data[0].keys()
         rows = [x.values() for x in data]
-        with open('output.csv', 'w', newline='') as fp:
-            writer = csv.writer(fp, delimiter=',')
+        with open("output.csv", "w", newline="") as fp:
+            writer = csv.writer(fp, delimiter=",")
             writer.writerow(header)
             for row in rows:
                 writer.writerow(row)
@@ -81,16 +81,15 @@ class DBC_parser():
     def process_sig(self, sig_list, msg_length):
         # if the length of signal smaller than the DLC
         for i in range(msg_length * 8 - len("".join(sig_list))):
-            sig_list.insert(0, '0')
+            sig_list.insert(0, "0")
         # transfer sig to bytearray
         signal = "".join(sig_list)
-        b = [signal[i:i + 8]
-             for i in range(0, len(signal), 8)]  # pack 8 bit per byte
+        b = [signal[i : i + 8] for i in range(0, len(signal), 8)]  # pack 8 bit per byte
         b.reverse()
         signal = "".join(b)
-        process_signal = ' '.join([
-            signal[i:i + 8] for i in range(0, len(signal), 8)
-        ])  # insert " " per 8 bit
+        process_signal = " ".join(
+            [signal[i : i + 8] for i in range(0, len(signal), 8)]
+        )  # insert " " per 8 bit
         # process_signal = process_signal + ' '
         encoded_string = process_signal.encode()
         byte_array = bytearray(encoded_string)
@@ -98,8 +97,9 @@ class DBC_parser():
 
     # map value in to predefined range
     # min<num<max, num<length, unsigned_num>=0
-    def map_num_to_range(self, num, max, min, float, bit_length, signed,
-                         offset, factor):
+    def map_num_to_range(
+        self, num, max, min, float, bit_length, signed, offset, factor
+    ):
         if num < 0 and signed == False:
             num = (min - offset) / factor
         if num > max:
@@ -122,7 +122,7 @@ class DBC_parser():
             "length": msg.length,
             "sender": msg.senders,
             "group": dbc_data.get_message_by_name(msg.name),
-            "sig_list": []  # signal group in this msg
+            "sig_list": [],  # signal group in this msg
         }
         return Msg_structure
 
@@ -140,7 +140,7 @@ class DBC_parser():
             "factor": dbc_signal.scale,
             "unit": dbc_signal.unit,
             "is_float": dbc_signal.is_float,
-            "receiver": dbc_signal.receivers
+            "receiver": dbc_signal.receivers,
         }
         return Sig_structure
 
@@ -164,24 +164,30 @@ class DBC_parser():
                     Sig = self.readSig(signal)
 
                     # if sig_length smaller than the start_bit, insert 0
-                    for a in range(Sig["start"] -
-                                   len("".join(Msg["sig_list"]))):
-                        Msg["sig_list"].insert(0, '0')
+                    for a in range(Sig["start"] - len("".join(Msg["sig_list"]))):
+                        Msg["sig_list"].insert(0, "0")
 
                     # generate signal (physical value)
-                    gen_sig = (Sig["max"] - Sig["min"]) * gen_num[sig_num][
-                        i] + Sig["min"] + self.noise[i] * (Sig["max"] -
-                                                           Sig["min"]) * 0.01
+                    gen_sig = (
+                        (Sig["max"] - Sig["min"]) * gen_num[sig_num][i]
+                        + Sig["min"]
+                        + self.noise[i] * (Sig["max"] - Sig["min"]) * 0.01
+                    )
                     # transfer to raw_value (physical_value = raw_value * factor + offset)
                     gen_sig = (gen_sig - Sig["offset"]) / Sig["factor"]
                     # map sig in range
                     gen_sig = self.map_num_to_range(
-                        gen_sig, Sig["max"], Sig["min"], Sig["is_float"],
-                        Sig["length"], Sig["is_signed"], Sig["offset"],
-                        Sig["factor"])
+                        gen_sig,
+                        Sig["max"],
+                        Sig["min"],
+                        Sig["is_float"],
+                        Sig["length"],
+                        Sig["is_signed"],
+                        Sig["offset"],
+                        Sig["factor"],
+                    )
                     # mapping to binary sig
-                    bin_sig = decimal_to_binary(gen_sig, Sig["length"],
-                                                Sig["order"])
+                    bin_sig = decimal_to_binary(gen_sig, Sig["length"], Sig["order"])
                     Msg["sig_list"].insert(0, bin_sig)
                     sig_num = sig_num + 1
 
@@ -192,7 +198,7 @@ class DBC_parser():
                     "msg_id": Msg["id"],
                     "msg_length": Msg["length"],
                     "sender": Msg["sender"],
-                    "signal": byte_array
+                    "signal": byte_array,
                 }
                 timestamps = timestamps + 0.01
                 output.append(output_dict)
@@ -219,23 +225,33 @@ class DBC_parser():
                 for i in range(3600):
                     gen_num = sin_signal(timestamps, frequency, phase)
                     # generate signal (physical value)
-                    gen_sig = (Sig["max"] - Sig["min"]
-                               ) * gen_num + Sig["min"] + self.noise[i] * (
-                                   Sig["max"] - Sig["min"]) * 0.01
+                    gen_sig = (
+                        (Sig["max"] - Sig["min"]) * gen_num
+                        + Sig["min"]
+                        + self.noise[i] * (Sig["max"] - Sig["min"]) * 0.01
+                    )
                     # transfer to raw_value (physical_value = raw_value * factor + offset)
                     gen_sig = (gen_sig - Sig["offset"]) / Sig["factor"]
                     # if sig still in range
                     gen_sig = self.map_num_to_range(
-                        gen_sig, Sig["max"], Sig["min"], Sig["is_float"],
-                        Sig["length"], Sig["is_signed"], Sig["offset"],
-                        Sig["factor"])
+                        gen_sig,
+                        Sig["max"],
+                        Sig["min"],
+                        Sig["is_float"],
+                        Sig["length"],
+                        Sig["is_signed"],
+                        Sig["offset"],
+                        Sig["factor"],
+                    )
                     mdf_sig_list = np.append(mdf_sig_list, gen_sig)
                     mdf_time_list = np.append(mdf_time_list, timestamps)
                     timestamps = timestamps + 0.01
-                signal = Signal(samples=mdf_sig_list,
-                                timestamps=mdf_time_list,
-                                name=Sig["name"],
-                                unit=Sig["unit"])
+                signal = Signal(
+                    samples=mdf_sig_list,
+                    timestamps=mdf_time_list,
+                    name=Sig["name"],
+                    unit=Sig["unit"],
+                )
                 sigs.append(signal)
             self.mdf.append(sigs, acq_name=Msg["name"])
         self.mdf.save("output.mf4")
@@ -255,37 +271,46 @@ class DBC_parser():
             for msg in db.messages:
                 Msg = self.readMsg(db, msg)  # read msg info
                 # process header(ID, Dlc, Flags...)
-                TimestampMicros = (int(timestamps * 1000000)).to_bytes(
-                    4, 'little')
-                MsgId = (Msg["id"]).to_bytes(4, 'little')
-                WhichCan = (0).to_bytes(1, 'little')
-                Dlc = (Msg["length"]).to_bytes(1, 'little')
-                Flags = (0).to_bytes(1, 'little')
-                RESERVED = (0).to_bytes(1, 'little')
-                signal_byte = TimestampMicros + MsgId + WhichCan + Dlc + Flags + RESERVED
+                TimestampMicros = (int(timestamps * 1000000)).to_bytes(4, "little")
+                MsgId = (Msg["id"]).to_bytes(4, "little")
+                WhichCan = (0).to_bytes(1, "little")
+                Dlc = (Msg["length"]).to_bytes(1, "little")
+                Flags = (0).to_bytes(1, "little")
+                RESERVED = (0).to_bytes(1, "little")
+                signal_byte = (
+                    TimestampMicros + MsgId + WhichCan + Dlc + Flags + RESERVED
+                )
 
                 for signal in Msg["group"].signals:
                     Sig = self.readSig(signal)  # read sig info
                     # generate signal (physical value)
-                    gen_sig = (Sig["max"] - Sig["min"]) * gen_num[sig_num][
-                        i] + Sig["min"] + self.noise[i] * (Sig["max"] -
-                                                           Sig["min"]) * 0.01
+                    gen_sig = (
+                        (Sig["max"] - Sig["min"]) * gen_num[sig_num][i]
+                        + Sig["min"]
+                        + self.noise[i] * (Sig["max"] - Sig["min"]) * 0.01
+                    )
                     # transfer to raw_value       (physical_value = raw_value * factor + offset)
                     gen_sig = (gen_sig - Sig["offset"]) / Sig["factor"]
                     # check if sig still in range
                     gen_sig = self.map_num_to_range(
-                        gen_sig, Sig["max"], Sig["min"], Sig["is_float"],
-                        Sig["length"], Sig["is_signed"], Sig["offset"],
-                        Sig["factor"])
+                        gen_sig,
+                        Sig["max"],
+                        Sig["min"],
+                        Sig["is_float"],
+                        Sig["length"],
+                        Sig["is_signed"],
+                        Sig["offset"],
+                        Sig["factor"],
+                    )
                     # mapping to binary sig
-                    if Sig["order"] == 'little_endian':
-                        bin_sig = (gen_sig).to_bytes((Sig["length"] + 7) // 8,
-                                                     'little',
-                                                     signed=Sig["is_signed"])
+                    if Sig["order"] == "little_endian":
+                        bin_sig = (gen_sig).to_bytes(
+                            (Sig["length"] + 7) // 8, "little", signed=Sig["is_signed"]
+                        )
                     else:
-                        bin_sig = (gen_sig).to_bytes((Sig["length"] + 7) // 8,
-                                                     'big',
-                                                     signed=Sig["is_signed"])
+                        bin_sig = (gen_sig).to_bytes(
+                            (Sig["length"] + 7) // 8, "big", signed=Sig["is_signed"]
+                        )
 
                     signal_byte = signal_byte + bin_sig
                     sig_num = sig_num + 1
