@@ -2,7 +2,7 @@
 
 #### A simple tool to read CAN DBC file (CAN database), and generate vehicle diagnotic signals in different file formats. (blf, csv, bin, mdf)
 
-## ReaD DBC file
+## Read DBC file
 
 Change `file_name` and `msg_name` and run `DBC_reader.py`.
 
